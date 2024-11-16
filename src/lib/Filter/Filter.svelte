@@ -27,7 +27,7 @@
                 <Button size="sm">
                     <RectangleListOutline class="w-6 h-6 text-blue-500 bg-primary-100 dark:bg-primary-800 dark:text-primary-200" />
                 </Button>
-                <Button size="sm">
+                <Button size="sm" disabled>
                     <GridSolid class="w-6 h-6 text-blue-500 bg-primary-100 dark:bg-primary-800 dark:text-primary-200" />
                 </Button>
             </ButtonGroup>
@@ -78,6 +78,4 @@
             </Dropdown>
         </div>
     </div>
-
-
 </div>

@@ -1,12 +1,12 @@
 <script lang="ts">
+  import { page } from '$app/stores';
   import Chart from '$lib/Chart/Chart.svelte';
-	import type { ITableData } from '$lib/interface/TableData.interface';
-	import MapView from '$lib/Map-View/MapView.svelte';
-	import { page } from '$app/stores';
-	import Table from '$lib/Table/Table.svelte';
-	import { Card } from 'flowbite-svelte';
-	import { derived } from 'svelte/store';
-	import '../app.css';
+  import type { ITableData } from '$lib/interface/TableData.interface';
+  import MapView from '$lib/Map-View/MapView.svelte';
+  import Table from '$lib/Table/Table.svelte';
+  import { Card } from 'flowbite-svelte';
+  import { derived } from 'svelte/store';
+  import '../app.css';
 
   export let data: { data: ITableData[] };
 

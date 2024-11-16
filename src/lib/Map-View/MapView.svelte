@@ -1,4 +1,4 @@
-<script lang="ts">
+<!-- <script lang="ts">
 	import type { ITableData } from "$lib/interface/TableData.interface";
     import { onMount } from "svelte";
     import "ol/ol.css"; // Import OpenLayers styles
@@ -28,60 +28,176 @@
     })
     let map: Map;
     
-    $: {
-        onMount(() => {
-            const features = locations.map((location) => {
-                const feature = new Feature({
-                    geometry: new Point(fromLonLat([location?.longitude as number, location?.latitude as number])), // Convert lon/lat to Web Mercator
-                });
-                feature.setStyle(
-                    new Style({
-                        image: new CircleStyle({
-                            radius: 8,
-                            fill: new Fill({ color: "green" }),
-                        }),
-                    })
-                );
-                return feature;
+    onMount(() => {
+        const features = locations.map((location) => {
+            const feature = new Feature({
+                geometry: new Point(fromLonLat([location?.longitude as number, location?.latitude as number])), // Convert lon/lat to Web Mercator
             });
-
-            // Create a vector source and layer for the points
-            const vectorSource = new VectorSource({ features });
-            const vectorLayer = new VectorLayer({ source: vectorSource });
-
-            // Initialize the map
-            const view = new View({
-                projection: "EPSG:3857", // Web Mercator projection
-            });
-
-            map = new Map({
-                target: "map", // ID of the container element
-                layers: [
-                    new TileLayer({
-                        source: new OSM(), // OpenStreetMap layer
+            feature.setStyle(
+                new Style({
+                    image: new CircleStyle({
+                        radius: 8,
+                        fill: new Fill({ color: "green" }),
                     }),
-                    vectorLayer, // Add the vector layer with points
-                ],
-                view,
-            });
-
-            // Automatically fit all points within the viewport
-            const extent = vectorSource.getExtent(); // Get the extent of all features
-            view.fit(extent, {
-                size: map.getSize(), // Fit to the current map size
-                padding: [50, 50, 50, 50], // Add some padding around the points
-                maxZoom: 12, // Set a maximum zoom level to avoid zooming in too much
-            });
-
-            // Cleanup on component destruction
-            return () => {
-                if (map) {
-                    map.setTarget(undefined);
-                }
-            };
+                })
+            );
+            return feature;
         });
+
+        // Create a vector source and layer for the points
+        const vectorSource = new VectorSource({ features });
+        const vectorLayer = new VectorLayer({ source: vectorSource });
+
+        // Initialize the map
+        const view = new View({
+            projection: "EPSG:3857", // Web Mercator projection
+        });
+
+        map = new Map({
+            target: "map", // ID of the container element
+            layers: [
+                new TileLayer({
+                    source: new OSM(), // OpenStreetMap layer
+                }),
+                vectorLayer, // Add the vector layer with points
+            ],
+            view,
+        });
+
+        // Automatically fit all points within the viewport
+        const extent = vectorSource.getExtent(); // Get the extent of all features
+        view.fit(extent, {
+            size: map.getSize(), // Fit to the current map size
+            padding: [50, 50, 50, 50], // Add some padding around the points
+            maxZoom: 12, // Set a maximum zoom level to avoid zooming in too much
+        });
+
+        // Cleanup on component destruction
+        return () => {
+            if (map) {
+                map.setTarget(undefined);
+            }
+        };
+    });
+</script> -->
+
+
+<script lang="ts">
+    import { onMount } from "svelte";
+    import Map from "ol/Map";
+    import View from "ol/View";
+    import TileLayer from "ol/layer/Tile";
+    import VectorLayer from "ol/layer/Vector";
+    import OSM from "ol/source/OSM";
+    import VectorSource from "ol/source/Vector";
+    import Feature from "ol/Feature";
+    import Point from "ol/geom/Point";
+    import { fromLonLat } from "ol/proj";
+    import { Style, Fill, Circle as CircleStyle } from "ol/style";
+    import type { IMapValue, ITableData } from "$lib/interface/TableData.interface";
+
+    let map: Map | null = null;
+
+    export let data: ITableData[] = [];
+    let tableData: ITableData[] = [];
+
+    $: tableData = data || [];
+
+    $: locations = tableData.map((item) => {
+        if (item?.location) {
+            return {
+                region: item?.location?.region,
+                latitude: item?.location?.latitude,
+                longitude: item?.location.longitude,
+            };
+        }
+    }).filter(Boolean); // Filter out undefined entries
+
+    let vectorSource: VectorSource | null = null;
+    let vectorLayer: VectorLayer | null = null;
+
+    function updateMap(locations: IMapValue[]) {
+        if (!vectorSource) {
+            console.error("Vector source not initialized");
+            return;
+        }
+
+        // Clear existing features
+        vectorSource.clear();
+
+        // Add new features based on the updated locations
+        const features = locations.map((location) => {
+            const feature = new Feature({
+                geometry: new Point(fromLonLat([location.longitude, location.latitude])),
+            });
+            feature.setStyle(
+                new Style({
+                    image: new CircleStyle({
+                        radius: 8,
+                        fill: new Fill({ color: "green" }),
+                    }),
+                })
+            );
+            return feature;
+        });
+
+        vectorSource.addFeatures(features);
+
+        // Adjust the view to fit new locations
+        const extent = vectorSource.getExtent();
+        if (extent && map) {
+            map.getView().fit(extent, {
+                size: map.getSize(),
+                padding: [50, 50, 50, 50],
+                maxZoom: 12,
+            });
+        }
+    }
+
+    onMount(() => {
+        // Initialize the vector source and layer
+        vectorSource = new VectorSource();
+        vectorLayer = new VectorLayer({ source: vectorSource });
+
+        // Initialize the map
+        const view = new View({
+            projection: "EPSG:3857",
+            center: fromLonLat([0, 0]),
+            zoom: 2,
+        });
+
+        map = new Map({
+            target: "map", // ID of the container element
+            layers: [
+                new TileLayer({
+                    source: new OSM(),
+                }),
+                vectorLayer,
+            ],
+            view,
+        });
+
+        // Add initial locations
+        if (locations.length > 0) {
+            updateMap(locations as IMapValue[]);
+        }
+
+        // Cleanup on component destruction
+        return () => {
+            if (map) {
+                map.setTarget(undefined);
+            }
+        };
+    });
+
+    $: {
+        if (vectorSource) {
+            updateMap(locations as IMapValue[]);
+        }
     }
 </script>
+
+
 
 <div class="w-full mt-3">
     <div id="map"></div>    

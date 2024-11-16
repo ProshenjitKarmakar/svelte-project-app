@@ -10,6 +10,12 @@ export interface ITableData {
     details: string
 }
 
+export interface IMapValue {
+    latitude: number;
+    longitude: number,
+    region: string
+}
+
 export interface Location {
     name: string
     region: string

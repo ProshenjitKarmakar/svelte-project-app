@@ -53,7 +53,7 @@
         <TableHeader />
         <TableBody tableBodyClass="divide-y">
             {#if (tableData as ITableData[]).length > 0}
-                {#each tableData as data (data.id)}
+                {#each tableData as data}
                     <TableBodyRow>
                         <TableBodyCell>{data?.full_name}</TableBodyCell>
                         <TableBodyCell>{data?.location?.name}</TableBodyCell>
