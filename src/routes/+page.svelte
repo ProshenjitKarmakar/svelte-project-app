@@ -1,10 +1,12 @@
 <script lang="ts">
-	import '../app.css';
-  import { Card } from 'flowbite-svelte';
-  import Table from '$lib/Table/Table.svelte';
-  import MapView from '$lib/Map-View/MapView.svelte';
 	import Chart from '$lib/Chart/Chart.svelte';
-  
+	import MapView from '$lib/Map-View/MapView.svelte';
+	import Table from '$lib/Table/Table.svelte';
+	import { Card } from 'flowbite-svelte';
+	import '../app.css';
+	import type { ITableData } from '$lib/interface/TableData.interface';
+
+  export let data;
 </script>
 
 <div>
@@ -22,17 +24,25 @@
       
       <!-- 70% width content (on larger screens) -->
       <div class="sm:col-span-2 p-4">
-        <Table />
+        <Table data={data?.data as ITableData[]} />
       </div>
 
       <!-- 30% width content (on larger screens) -->
-      <div class="sm:col-span-1 bg-gray-500 p-4 w-full gap-2">
-        <Card size="lg"> <!-- Ensure Card takes 100% width -->
-          <MapView />
+      <div class="sm:col-span-1 p-4 w-full gap-2">
+        <Card size="lg"> 
+          <h6 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+            Map View
+          </h6>
+          <hr />
+          <MapView data={data?.data as ITableData[]} />
         </Card>
 
-        <Card size="lg" class="mt-5"> <!-- Ensure Card takes 100% width -->
-          <Chart />
+        <Card size="lg" class="mt-5">
+          <h6 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+            Success Rate Chart
+          </h6>
+          <hr />
+          <Chart data={data?.data as ITableData[]} />
         </Card>
       </div>
     </div>
