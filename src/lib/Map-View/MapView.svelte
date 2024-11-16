@@ -83,18 +83,18 @@
 
 
 <script lang="ts">
-    import { onMount } from "svelte";
+    import type { IMapValue, ITableData } from "$lib/interface/TableData.interface";
+    import Feature from "ol/Feature";
     import Map from "ol/Map";
     import View from "ol/View";
+    import Point from "ol/geom/Point";
     import TileLayer from "ol/layer/Tile";
     import VectorLayer from "ol/layer/Vector";
+    import { fromLonLat } from "ol/proj";
     import OSM from "ol/source/OSM";
     import VectorSource from "ol/source/Vector";
-    import Feature from "ol/Feature";
-    import Point from "ol/geom/Point";
-    import { fromLonLat } from "ol/proj";
-    import { Style, Fill, Circle as CircleStyle } from "ol/style";
-    import type { IMapValue, ITableData } from "$lib/interface/TableData.interface";
+    import { Circle as CircleStyle, Fill, Style } from "ol/style";
+    import { onMount } from "svelte";
 
     let map: Map | null = null;
 
@@ -111,7 +111,7 @@
                 longitude: item?.location.longitude,
             };
         }
-    }).filter(Boolean); // Filter out undefined entries
+    }).filter(Boolean);
 
     let vectorSource: VectorSource | null = null;
     let vectorLayer: VectorLayer | null = null;
@@ -121,11 +121,8 @@
             console.error("Vector source not initialized");
             return;
         }
-
-        // Clear existing features
         vectorSource.clear();
 
-        // Add new features based on the updated locations
         const features = locations.map((location) => {
             const feature = new Feature({
                 geometry: new Point(fromLonLat([location.longitude, location.latitude])),
@@ -155,11 +152,9 @@
     }
 
     onMount(() => {
-        // Initialize the vector source and layer
         vectorSource = new VectorSource();
         vectorLayer = new VectorLayer({ source: vectorSource });
 
-        // Initialize the map
         const view = new View({
             projection: "EPSG:3857",
             center: fromLonLat([0, 0]),
@@ -167,7 +162,7 @@
         });
 
         map = new Map({
-            target: "map", // ID of the container element
+            target: "map",
             layers: [
                 new TileLayer({
                     source: new OSM(),
@@ -177,12 +172,10 @@
             view,
         });
 
-        // Add initial locations
         if (locations.length > 0) {
             updateMap(locations as IMapValue[]);
         }
 
-        // Cleanup on component destruction
         return () => {
             if (map) {
                 map.setTarget(undefined);
@@ -196,8 +189,6 @@
         }
     }
 </script>
-
-
 
 <div class="w-full mt-3">
     <div id="map"></div>    

@@ -11,7 +11,6 @@
   export let data: { data: ITableData[] };
 
   const status = derived(page, ($page) => {
-    console.log('page', $page); // Check the full page store
     return $page.url.searchParams.get('status') || '';
   });
   
@@ -48,12 +47,12 @@
   <div class="my-4 mx-4 sm:mx-8 lg:mx-28">
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
       
-      <!-- 70% width content (on larger screens) -->
+      <!-- Table and Filter Section -->
       <div class="sm:col-span-2 p-4">
         <Table data={filteredData as ITableData[]} />
       </div>
 
-      <!-- 30% width content (on larger screens) -->
+      <!-- Map and Chart Section -->
       <div class="sm:col-span-1 p-4 w-full gap-2">
         <Card size="lg"> 
           <h6 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">

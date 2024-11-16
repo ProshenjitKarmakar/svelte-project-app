@@ -32,6 +32,7 @@
 
         if (!ctx) {
             console.error("Canvas element not found");
+            alert('Canvas element not found')
             return;
         }
 
@@ -42,11 +43,11 @@
                     {
                         data: chartData,
                         backgroundColor: [
-                            "#FF007F", // Color for segment 1
-                            "#18DBCC", // Color for segment 2
-                            "#3B00FF", // Color for segment 3
-                            "#FFBF69", // Color for segment 4
-                            "#6A4C93", // Color for segment 5
+                            "#FF007F", 
+                            "#18DBCC",
+                            "#3B00FF",
+                            "#FFBF69",
+                            "#6A4C93",
                         ],
                         borderWidth: 1,
                     },
@@ -69,19 +70,16 @@
             return;
         }
 
-        // Update the chart data
         chart.data.datasets[0].data = chartData;
         chart.update();
     }
 
     onMount(() => {
-        // Initialize the chart when the component mounts
         if (chartData.length > 0) {
             initializeChart(chartData);
         }
 
         return () => {
-            // Clean up the chart instance when the component is destroyed
             if (chart) {
                 chart.destroy();
                 chart = null;
