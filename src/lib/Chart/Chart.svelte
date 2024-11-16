@@ -1,24 +1,28 @@
 <script lang="ts" >
 	import type { ITableData } from "$lib/interface/TableData.interface";
-    import { onMount } from "svelte";
+    import { onMount, beforeUpdate, afterUpdate } from "svelte";
     import Chart from "chart.js/auto";
 
     let chart: Chart | null = null;
-    export let data;
-    const tableData: ITableData[] = data || [];
-    let chartData = tableData.map((item) => {
-        if(item?.attempted_landings && item?.successful_landings) {
-            let success_rate = (item?.successful_landings / item?.attempted_landings) * 100
-            if(success_rate > 0) {
-                return success_rate
-            }    
-        } else {
-            return 0
-        }
-    })
-    chartData = chartData.filter((item) => item != 0)
+    export let data: ITableData[] = [];
 
-    onMount(() => {
+    let chartData: number[] = [];
+
+    // This reactive statement will re-run whenever `data` changes
+    $: {
+        const tableData: ITableData[] = data || [];
+        chartData = tableData
+        .map((item) => {
+            if (item?.attempted_landings && item?.successful_landings) {
+            let success_rate = (item?.successful_landings / item?.attempted_landings) * 100;
+            return success_rate > 0 ? success_rate : 0;
+            }
+            return 0;
+        })
+        .filter((item) => item !== 0); // Filter out invalid data points (i.e., 0 values)
+    }
+    
+    function chartUpdate() {
         const ctx = document.getElementById("doughnutChart") as HTMLCanvasElement;
 
         chart = new Chart(ctx, {
@@ -46,12 +50,14 @@
                 cutout: "75%",
             },
         });
+    }
 
+    onMount(() => {
+        chartUpdate()
         return () => {
             (chart as Chart).destroy();
         };
     });
-
 </script>
 
 <div>

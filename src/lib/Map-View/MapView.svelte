@@ -12,8 +12,12 @@
     import { Circle as CircleStyle, Fill, Style } from "ol/style";
 	import { fromLonLat } from "ol/proj";
 
-    export let data: ITableData[];
-    const locations = data?.map((item) => {
+    export let data;
+    let tableData: ITableData[] = [];
+
+    $: tableData = data || [];
+
+    $: locations = tableData?.map((item) => {
         if(item?.location) {
             return {
                 region: item?.location?.region,
@@ -23,67 +27,60 @@
         }
     })
     let map: Map;
-
-    console.log("=====locations======", locations);
     
-
-
-    onMount(() => {
-        // Convert location data into OpenLayers features
-        const features = locations.map((location) => {
-            const feature = new Feature({
-                geometry: new Point(fromLonLat([location.longitude, location.latitude])), // Convert lon/lat to Web Mercator
+    $: {
+        onMount(() => {
+            const features = locations.map((location) => {
+                const feature = new Feature({
+                    geometry: new Point(fromLonLat([location?.longitude as number, location?.latitude as number])), // Convert lon/lat to Web Mercator
+                });
+                feature.setStyle(
+                    new Style({
+                        image: new CircleStyle({
+                            radius: 8,
+                            fill: new Fill({ color: "green" }),
+                        }),
+                    })
+                );
+                return feature;
             });
-            feature.setStyle(
-                new Style({
-                    image: new CircleStyle({
-                        radius: 8, // Size of the point
-                        fill: new Fill({ color: "green" }), // Point color
+
+            // Create a vector source and layer for the points
+            const vectorSource = new VectorSource({ features });
+            const vectorLayer = new VectorLayer({ source: vectorSource });
+
+            // Initialize the map
+            const view = new View({
+                projection: "EPSG:3857", // Web Mercator projection
+            });
+
+            map = new Map({
+                target: "map", // ID of the container element
+                layers: [
+                    new TileLayer({
+                        source: new OSM(), // OpenStreetMap layer
                     }),
-                })
-            );
-            return feature;
+                    vectorLayer, // Add the vector layer with points
+                ],
+                view,
+            });
+
+            // Automatically fit all points within the viewport
+            const extent = vectorSource.getExtent(); // Get the extent of all features
+            view.fit(extent, {
+                size: map.getSize(), // Fit to the current map size
+                padding: [50, 50, 50, 50], // Add some padding around the points
+                maxZoom: 12, // Set a maximum zoom level to avoid zooming in too much
+            });
+
+            // Cleanup on component destruction
+            return () => {
+                if (map) {
+                    map.setTarget(undefined);
+                }
+            };
         });
-
-        // Create a vector source and layer for the points
-        const vectorSource = new VectorSource({ features });
-        const vectorLayer = new VectorLayer({ source: vectorSource });
-
-        // Initialize the map
-        const view = new View({
-            projection: "EPSG:3857", // Web Mercator projection
-        });
-
-        map = new Map({
-            target: "map", // ID of the container element
-            layers: [
-                new TileLayer({
-                    source: new OSM(), // OpenStreetMap layer
-                }),
-                vectorLayer, // Add the vector layer with points
-            ],
-            view,
-        });
-
-        // Automatically fit all points within the viewport
-        const extent = vectorSource.getExtent(); // Get the extent of all features
-        view.fit(extent, {
-            size: map.getSize(), // Fit to the current map size
-            padding: [50, 50, 50, 50], // Add some padding around the points
-            maxZoom: 12, // Set a maximum zoom level to avoid zooming in too much
-        });
-
-        // Cleanup on component destruction
-        return () => {
-            if (map) {
-                map.setTarget(undefined);
-            }
-        };
-    });
-
-
-
-
+    }
 </script>
 
 <div class="w-full mt-3">

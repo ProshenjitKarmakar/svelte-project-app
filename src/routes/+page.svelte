@@ -1,12 +1,38 @@
 <script lang="ts">
-	import Chart from '$lib/Chart/Chart.svelte';
+  import Chart from '$lib/Chart/Chart.svelte';
+	import type { ITableData } from '$lib/interface/TableData.interface';
 	import MapView from '$lib/Map-View/MapView.svelte';
+	import { page } from '$app/stores';
 	import Table from '$lib/Table/Table.svelte';
 	import { Card } from 'flowbite-svelte';
+	import { derived } from 'svelte/store';
 	import '../app.css';
-	import type { ITableData } from '$lib/interface/TableData.interface';
 
-  export let data;
+  export let data: { data: ITableData[] };
+
+  const status = derived(page, ($page) => {
+    console.log('page', $page); // Check the full page store
+    return $page.url.searchParams.get('status') || '';
+  });
+  
+  const getStatus = (status: string): string => {
+    const statusMap: { [key: string]: string } = {
+      'active': 'active',
+      'retired': 'retired',
+      'under-construction': 'under construction'
+    };
+    return statusMap[status] || '';
+  };
+
+  let filteredData : ITableData[] = [];
+
+  $: {
+    const mappedStatus = getStatus($status);  
+
+    filteredData = mappedStatus === '' 
+      ? data?.data || [] 
+      : (data?.data.filter((item) => item.status === mappedStatus) || []);
+  }
 </script>
 
 <div>
@@ -24,7 +50,7 @@
       
       <!-- 70% width content (on larger screens) -->
       <div class="sm:col-span-2 p-4">
-        <Table data={data?.data as ITableData[]} />
+        <Table data={filteredData as ITableData[]} />
       </div>
 
       <!-- 30% width content (on larger screens) -->
@@ -34,7 +60,7 @@
             Map View
           </h6>
           <hr />
-          <MapView data={data?.data as ITableData[]} />
+          <MapView data={filteredData as ITableData[]} />
         </Card>
 
         <Card size="lg" class="mt-5">
@@ -42,7 +68,7 @@
             Success Rate Chart
           </h6>
           <hr />
-          <Chart data={data?.data as ITableData[]} />
+          <Chart data={filteredData as ITableData[]} />
         </Card>
       </div>
     </div>

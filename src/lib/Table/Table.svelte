@@ -8,7 +8,9 @@
     import TableStatusCell from './TableStatusCell.svelte';
 
     export let data;
-    const tableData: ITableData[] = data || [];
+    let tableData: ITableData[] = [];
+
+    $: tableData = data || [];
 
     let detailModal = {
         data: '',
@@ -51,7 +53,7 @@
         <TableHeader />
         <TableBody tableBodyClass="divide-y">
             {#if (tableData as ITableData[]).length > 0}
-                {#each tableData as data}
+                {#each tableData as data (data.id)}
                     <TableBodyRow>
                         <TableBodyCell>{data?.full_name}</TableBodyCell>
                         <TableBodyCell>{data?.location?.name}</TableBodyCell>
