@@ -20,7 +20,7 @@ export function useDoughnutChart(data: ITableData[]) {
     );
 
     function setData(newData: ITableData[]) {
-        tableData.set(newData); // Update the internal writable store
+        tableData.set(newData);
     }
 
     let chart: Chart<"doughnut", number[]> | null = null;
