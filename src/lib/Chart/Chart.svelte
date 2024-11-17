@@ -1,99 +1,38 @@
 <script lang="ts">
     import type { ITableData } from "$lib/interface/TableData.interface";
-    import Chart from "chart.js/auto";
-    import { derived, writable } from "svelte/store";
+	import { useDoughnutChart } from "../../hooks/useDoughnutChart";
 
-    let chart: Chart<"doughnut", number[]> | null = null;
     const { data }: { data: ITableData[] } = $props();
 
-    const tableData = writable<ITableData[]>(data);
+    const {
+        chartData,
+        initializeChart,
+        updateChart,
+        destroyChart,
+        setData,
+    } = useDoughnutChart(data);
 
     $effect(() => {
-        tableData.set(data);
-    });
-
-    const chartData = derived(tableData, ($tableData) => {
-        return $tableData
-            .map((item) => {
-                if (item?.attempted_landings && item?.successful_landings) {
-                    let success_rate = (item.successful_landings / item.attempted_landings) * 100;
-                    return success_rate > 0 ? success_rate : 0;
-                }
-                return 0;
-            })
-            .filter((item) => item !== 0);
-    });
-
-    function initializeChart(chartData: number[]) {
-        const ctx = document.getElementById("doughnutChart") as HTMLCanvasElement;
-
-        if (!ctx) {
-            console.error("Canvas element not found");
-            alert("Canvas element not found");
-            return;
-        }
-
-        chart = new Chart(ctx, {
-            type: "doughnut",
-            data: {
-                datasets: [
-                    {
-                        data: chartData,
-                        backgroundColor: [
-                            "#FF007F",
-                            "#18DBCC",
-                            "#3B00FF",
-                            "#FFBF69",
-                            "#6A4C93",
-                        ],
-                        borderWidth: 1,
-                    },
-                ],
-            },
-            options: {
-                plugins: {
-                    legend: { display: true },
-                    tooltip: { enabled: true },
-                },
-                cutout: "75%",
-            },
-        });
-    }
-
-    function updateChart(chartData: number[]) {
-        if (!chart) {
-            console.error("Chart instance is not initialized");
-            alert("Chart instance is not initialized");
-            return;
-        }
-
-        chart.data.datasets[0].data = chartData;
-        chart.update();
-    }
-
-    $effect(() => {
-        const currentData = $chartData;
-        if (chart) {
-            updateChart(currentData);
-        }
+        setData(data);
     });
 
     $effect(() => {
-        const currentData = $chartData;
-        if (currentData) {
-            initializeChart(currentData);
+        if ($chartData.length) {
+            initializeChart("doughnutChart", $chartData);
         }
 
         return () => {
-            if (chart) {
-                chart.destroy();
-                chart = null;
-            }
+            destroyChart();
         };
     });
 
-        
+    $effect(() => {
+        if ($chartData.length) {
+            updateChart($chartData);
+        }
+    });
 </script>
+
 <div>
     <div style="position: relative; ">
         <canvas id="doughnutChart"></canvas>

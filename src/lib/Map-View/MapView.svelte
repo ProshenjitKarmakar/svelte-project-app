@@ -40,7 +40,6 @@
 
     function updateMap(locations: IMapValue[]) {
         if (!vectorSource) {
-            console.error('Vector source not initialized');
             alert('Vector source not initialized');
             return;
         }
@@ -106,6 +105,7 @@
         return () => unsubscribe();
     });
 </script>
+
 
 <div class="w-full mt-3">
     <div id="map"></div>  

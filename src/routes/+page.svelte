@@ -5,7 +5,7 @@
   import MapView from '$lib/Map-View/MapView.svelte';
   import Table from '$lib/Table/Table.svelte';
   import { Card } from 'flowbite-svelte';
-  import { writable, derived } from 'svelte/store';
+  import { derived, writable } from 'svelte/store';
   import '../app.css';
 
   const { data }: { data: { data: ITableData[] } } = $props();
@@ -28,6 +28,7 @@
       ? $rawData.filter((item: ITableData) => item.status === mappedStatus)
       : $rawData;
   });
+  
 </script>
 
 <div>
