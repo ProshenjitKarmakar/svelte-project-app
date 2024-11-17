@@ -1,16 +1,19 @@
 <script lang="ts">
     import type { ITableData } from "$lib/interface/TableData.interface";
     import Chart from "chart.js/auto";
-    import { onMount } from "svelte";
+    import { derived, writable } from "svelte/store";
 
     let chart: Chart<"doughnut", number[]> | null = null;
-    export let data: ITableData[] = [];
+    const { data }: { data: ITableData[] } = $props();
 
-    let chartData: number[] = [];
+    const tableData = writable<ITableData[]>(data);
 
-    $: {
-        const tableData: ITableData[] = data || [];
-        chartData = tableData
+    $effect(() => {
+        tableData.set(data);
+    });
+
+    const chartData = derived(tableData, ($tableData) => {
+        return $tableData
             .map((item) => {
                 if (item?.attempted_landings && item?.successful_landings) {
                     let success_rate = (item.successful_landings / item.attempted_landings) * 100;
@@ -19,20 +22,14 @@
                 return 0;
             })
             .filter((item) => item !== 0);
-    }
-
-    $: {
-        if (chart) {
-            updateChart(chartData);
-        }
-    }
+    });
 
     function initializeChart(chartData: number[]) {
         const ctx = document.getElementById("doughnutChart") as HTMLCanvasElement;
 
         if (!ctx) {
             console.error("Canvas element not found");
-            alert('Canvas element not found')
+            alert("Canvas element not found");
             return;
         }
 
@@ -43,7 +40,7 @@
                     {
                         data: chartData,
                         backgroundColor: [
-                            "#FF007F", 
+                            "#FF007F",
                             "#18DBCC",
                             "#3B00FF",
                             "#FFBF69",
@@ -66,7 +63,7 @@
     function updateChart(chartData: number[]) {
         if (!chart) {
             console.error("Chart instance is not initialized");
-            alert('Chart instance is not initialized')
+            alert("Chart instance is not initialized");
             return;
         }
 
@@ -74,9 +71,17 @@
         chart.update();
     }
 
-    onMount(() => {
-        if (chartData.length > 0) {
-            initializeChart(chartData);
+    $effect(() => {
+        const currentData = $chartData;
+        if (chart) {
+            updateChart(currentData);
+        }
+    });
+
+    $effect(() => {
+        const currentData = $chartData;
+        if (currentData) {
+            initializeChart(currentData);
         }
 
         return () => {
@@ -86,9 +91,9 @@
             }
         };
     });
+
+        
 </script>
-
-
 <div>
     <div style="position: relative; ">
         <canvas id="doughnutChart"></canvas>
@@ -103,7 +108,7 @@
                 text-align: center;
             "
         >
-            <span>{chartData?.length ?? 0}</span>
+            <span>{$chartData?.length ?? 0}</span>
             <br />
             <span style="font-size: 12px;">Landing Pads</span>
         </div>

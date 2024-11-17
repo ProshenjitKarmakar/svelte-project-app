@@ -5,33 +5,29 @@
   import MapView from '$lib/Map-View/MapView.svelte';
   import Table from '$lib/Table/Table.svelte';
   import { Card } from 'flowbite-svelte';
-  import { derived } from 'svelte/store';
+  import { writable, derived } from 'svelte/store';
   import '../app.css';
 
-  export let data: { data: ITableData[] };
+  const { data }: { data: { data: ITableData[] } } = $props();
 
-  const status = derived(page, ($page) => {
-    return $page.url.searchParams.get('status') || '';
-  });
-  
+  const rawData = writable(data.data);
+
+  const status = derived(page, ($page) => $page.url.searchParams.get('status') || '');
+
   const getStatus = (status: string): string => {
-    const statusMap: { [key: string]: string } = {
-      'active': 'active',
-      'retired': 'retired',
-      'under-construction': 'under construction'
-    };
-    return statusMap[status] || '';
+    return {
+      active: 'active',
+      retired: 'retired',
+      'under-construction': 'under construction',
+    }[status] || '';
   };
 
-  let filteredData : ITableData[] = [];
-
-  $: {
-    const mappedStatus = getStatus($status);  
-
-    filteredData = mappedStatus === '' 
-      ? data?.data || [] 
-      : (data?.data.filter((item) => item.status === mappedStatus) || []);
-  }
+  const filteredData = derived([rawData, status], ([$rawData, $status]) => {
+    const mappedStatus = getStatus($status);
+    return mappedStatus
+      ? $rawData.filter((item: ITableData) => item.status === mappedStatus)
+      : $rawData;
+  });
 </script>
 
 <div>
@@ -49,7 +45,7 @@
       
       <!-- Table and Filter Section -->
       <div class="sm:col-span-2 p-4">
-        <Table data={filteredData as ITableData[]} />
+        <Table data={$filteredData as ITableData[]} />
       </div>
 
       <!-- Map and Chart Section -->
@@ -59,7 +55,7 @@
             Map View
           </h6>
           <hr />
-          <MapView data={filteredData as ITableData[]} />
+          <MapView data={$filteredData as ITableData[]} />
         </Card>
 
         <Card size="lg" class="mt-5">
@@ -67,10 +63,11 @@
             Success Rate Chart
           </h6>
           <hr />
-          <Chart data={filteredData as ITableData[]} />
+          <Chart data={$filteredData as ITableData[]} />
         </Card>
       </div>
     </div>
   </div>
 </div>
+
 
